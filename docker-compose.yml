@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: instagram
+      POSTGRES_PASSWORD: instagram
+      POSTGRES_DB: instagram
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U instagram -d instagram"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./apps/api
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://instagram:instagram@db:5432/instagram
+      WEB_ORIGIN: http://localhost:3002
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./apps/web
+    ports:
+      - "3002:3000"
+    environment:
+      API_INTERNAL_URL: http://api:3001
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

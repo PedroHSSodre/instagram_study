@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "Prisma": {
+      "url": "https://mcp.prisma.io/mcp"
+    },
+    "observe": {
+      "url": "https://observe-api.nestjs.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:OBSERVE_MCP_TOKEN}"
+      }
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    }
+  }
+}

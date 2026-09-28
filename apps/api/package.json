@@ -9,6 +9,7 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
     "contract:emit": "prisma contract emit",
+    "db:migrate": "prisma db migrate",
     "postinstall": "prisma skills sync || exit 0"
   },
   "dependencies": {

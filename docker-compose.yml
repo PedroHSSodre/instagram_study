@@ -32,7 +32,7 @@ services:
     volumes:
       - ./apps/api:/app
       - api_node_modules:/app/node_modules
-    command: sh -c "rm -rf dist tsconfig.tsbuildinfo && npm run start:dev -- --path tsconfig.docker.json"
+    command: sh -c "rm -rf dist tsconfig.tsbuildinfo && npm run db:migrate && npm run start:dev -- --path tsconfig.docker.json"
     depends_on:
       db:
         condition: service_healthy

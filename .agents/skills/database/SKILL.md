@@ -79,6 +79,30 @@ comment_table
 
 sem uma justificativa arquitetural.
 
+## Prefixo de colunas
+
+Toda coluna começa com o prefixo de três letras da sua tabela, seguido de `_`.
+
+```text
+users        usr_
+posts        pst_
+post_images  pim_
+comments     cmt_
+likes        lik_
+follows      flw_
+```
+
+O prefixo vale para chaves, FKs, timestamps e atributos:
+
+```text
+usr_id
+usr_email
+pst_user_id
+pst_created_at
+```
+
+Uma tabela nova recebe um prefixo próprio, de três letras, que não repete o de outra tabela.
+
 ---
 
 # 4. Primary Keys
@@ -87,13 +111,12 @@ Toda entidade persistida deve possuir uma chave primária.
 
 A estratégia de identificação deve ser consistente em todo o sistema.
 
-Exemplo:
+A chave primária é um UUID chamado `{prefixo}_id`:
 
 ```text
-id
+users.usr_id
+posts.pst_id
 ```
-
-A tecnologia e o formato definitivo da chave devem ser definidos no padrão do projeto.
 
 ---
 
@@ -101,12 +124,12 @@ A tecnologia e o formato definitivo da chave devem ser definidos no padrão do p
 
 Relacionamentos devem ser representados por Foreign Keys sempre que apropriado.
 
-Exemplo:
+A FK usa o prefixo da tabela onde está, seguido do nome da entidade referenciada:
 
 ```text
-posts.user_id → users.id
-comments.post_id → posts.id
-comments.user_id → users.id
+posts.pst_user_id → users.usr_id
+comments.cmt_post_id → posts.pst_id
+comments.cmt_user_id → users.usr_id
 ```
 
 Não depender apenas da aplicação para manter integridade referencial quando o banco puder garanti-la.
@@ -130,7 +153,7 @@ CHECK
 Exemplo:
 
 ```text
-users.email UNIQUE
+users.usr_email UNIQUE
 ```
 
 Se uma regra representa uma restrição estrutural dos dados, considerar implementá-la também no banco.
@@ -144,14 +167,14 @@ Dados que não podem possuir duplicidade devem possuir constraint `UNIQUE`.
 Exemplos:
 
 ```text
-users.email
-users.username
+users.usr_email
+users.usr_username
 ```
 
 Para regras compostas:
 
 ```text
-UNIQUE(user_id, post_id)
+UNIQUE(lik_user_id, lik_post_id)
 ```
 
 Isso é particularmente importante para relações como:
@@ -178,12 +201,12 @@ ORDER BY
 Exemplos possíveis:
 
 ```text
-posts.user_id
-posts.created_at
-comments.post_id
-likes.post_id
-follows.follower_id
-follows.following_id
+posts.pst_user_id
+posts.pst_created_at
+comments.cmt_post_id
+likes.lik_post_id
+follows.flw_follower_id
+follows.flw_following_id
 ```
 
 Não criar índices indiscriminadamente.
@@ -203,7 +226,7 @@ Utilizar índices compostos quando o padrão de consulta justificar.
 Exemplo:
 
 ```text
-INDEX(user_id, created_at)
+INDEX(pst_user_id, pst_created_at)
 ```
 
 A ordem das colunas deve considerar os filtros e ordenações utilizados pelas consultas.
@@ -258,8 +281,8 @@ follows
 Estrutura conceitual:
 
 ```text
-follower_id → users.id
-following_id → users.id
+flw_follower_id → users.usr_id
+flw_following_id → users.usr_id
 ```
 
 Esses relacionamentos devem possuir constraints adequadas.
@@ -267,7 +290,8 @@ Esses relacionamentos devem possuir constraints adequadas.
 Exemplo:
 
 ```text
-UNIQUE(follower_id, following_id)
+UNIQUE(flw_follower_id, flw_following_id)
+CHECK(flw_follower_id <> flw_following_id)
 ```
 
 Quando a regra exigir que um usuário não possa seguir a si mesmo, essa regra deve ser protegida pela aplicação e, quando tecnicamente apropriado, também pelo banco.
@@ -313,17 +337,19 @@ Defaults não devem esconder erros da aplicação.
 
 # 14. Timestamps
 
-Entidades persistidas que possuem ciclo de vida devem considerar:
+Entidades persistidas que possuem ciclo de vida devem considerar, com o prefixo da tabela:
 
 ```text
-created_at
-updated_at
+{prefixo}_created_at
+{prefixo}_updated_at
 ```
+
+Timestamps usam `TIMESTAMPTZ NOT NULL`.
 
 Quando necessário, adicionar:
 
 ```text
-deleted_at
+{prefixo}_deleted_at
 ```
 
 para soft delete.
@@ -341,8 +367,8 @@ Utilizar soft delete quando o sistema precisar preservar o registro ou históric
 Exemplo:
 
 ```text
-users.deleted_at
-posts.deleted_at
+users.usr_deleted_at
+posts.pst_deleted_at
 ```
 
 Consultas devem considerar corretamente registros removidos.
@@ -594,7 +620,7 @@ Application:
 "Usuário não pode seguir a si mesmo."
 
 Database:
-"follower_id e following_id devem referenciar usuários existentes."
+"flw_follower_id e flw_following_id devem referenciar usuários existentes."
 ```
 
 ---

@@ -1,21 +1,98 @@
 // use prisma-8
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String?
-  name      String?
+  usr_id            Uuid              @id @default(uuid())
+  usr_username      VarChar(30)       @unique
+  usr_display_name  VarChar(100)
+  usr_email         VarChar(255)      @unique
+  usr_password_hash VarChar(255)
+  usr_avatar_url    String?
+  usr_bio           VarChar(150)?
+  usr_created_at    TimestamptzString @default(now())
+  usr_updated_at    temporal.updatedAtString()
+
   posts     Post[]
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+  comments  Comment[]
+  likes     Like[]
+  following Follow[] @relation("follower")
+  followers Follow[] @relation("following")
+
+  @@map("users")
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+  pst_id         Uuid              @id @default(uuid())
+  pst_user_id    Uuid
+  pst_caption    String?
+  pst_created_at TimestamptzString @default(now())
+  pst_updated_at temporal.updatedAtString()
+
+  user     User        @relation(fields: [pst_user_id], references: [usr_id], onDelete: Cascade, index: false)
+  images   PostImage[]
+  comments Comment[]
+  likes    Like[]
+
+  @@index([pst_user_id, pst_created_at])
+  @@map("posts")
+}
+
+model PostImage {
+  pim_id         Uuid              @id @default(uuid())
+  pim_post_id    Uuid
+  pim_url        String
+  pim_position   Int
+  pim_width      Int
+  pim_height     Int
+  pim_mime_type  VarChar(50)
+  pim_file_size  BigInt
+  pim_created_at TimestamptzString @default(now())
+
+  post Post @relation(fields: [pim_post_id], references: [pst_id], onDelete: Cascade, index: false)
+
+  @@unique([pim_post_id, pim_position])
+  @@map("post_images")
+}
+
+model Comment {
+  cmt_id         Uuid              @id @default(uuid())
+  cmt_post_id    Uuid
+  cmt_user_id    Uuid
+  cmt_content    String
+  cmt_created_at TimestamptzString @default(now())
+  cmt_updated_at temporal.updatedAtString()
+
+  post Post @relation(fields: [cmt_post_id], references: [pst_id], onDelete: Cascade, index: false)
+  user User @relation(fields: [cmt_user_id], references: [usr_id], onDelete: Cascade, index: false)
+
+  @@index([cmt_post_id, cmt_created_at])
+  @@map("comments")
+}
+
+model Like {
+  lik_id         Uuid              @id @default(uuid())
+  lik_user_id    Uuid
+  lik_post_id    Uuid
+  lik_created_at TimestamptzString @default(now())
+
+  user User @relation(fields: [lik_user_id], references: [usr_id], onDelete: Cascade, index: false)
+  post Post @relation(fields: [lik_post_id], references: [pst_id], onDelete: Cascade)
+
+  @@unique([lik_user_id, lik_post_id])
+  @@index([lik_post_id])
+  @@map("likes")
+}
+
+model Follow {
+  flw_id           Uuid              @id @default(uuid())
+  flw_follower_id  Uuid
+  flw_following_id Uuid
+  flw_created_at   TimestamptzString @default(now())
+
+  follower  User @relation("follower", fields: [flw_follower_id], references: [usr_id], onDelete: Cascade, index: false)
+  following User @relation("following", fields: [flw_following_id], references: [usr_id], onDelete: Cascade)
+
+  @@unique([flw_follower_id, flw_following_id])
+  @@index([flw_following_id])
+  @@check(expression: "flw_follower_id <> flw_following_id", name: "follows_no_self_follow")
+  @@map("follows")
 }

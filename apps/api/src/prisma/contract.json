@@ -1181,6 +1181,23 @@
               "uniques": []
             },
             "users": {
+              "checks": [
+                {
+                  "expression": "usr_email = lower(usr_email)",
+                  "name": "users_email_lowercase_e2c307fe",
+                  "prefix": "users_email_lowercase"
+                },
+                {
+                  "expression": "char_length(usr_username) >= 3 AND usr_username ~ '^[!-~]+$'",
+                  "name": "users_username_format_5cc7bdc4",
+                  "prefix": "users_username_format"
+                },
+                {
+                  "expression": "usr_username = lower(usr_username)",
+                  "name": "users_username_lowercase_3d0c30e9",
+                  "prefix": "users_username_lowercase"
+                }
+              ],
               "columns": {
                 "usr_avatar_url": {
                   "codecId": "pg/text@1",
@@ -1273,7 +1290,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "3cb202010b8ebe142dd2acf2d6c7765f9174b96ee6ae3a273cbb983fbdc7db8f"
+    "storageHash": "d14edd73c882e9968dc14446426d32677e74c66012535a61a0e6b64a744db1b6"
   },
   "execution": {
     "executionHash": "ca59eaf4fcf87bc85fd6c0638f7a90748f506a8c8f99ef2bba276db47fcba1a9",

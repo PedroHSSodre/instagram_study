@@ -17,6 +17,9 @@ model User {
   following Follow[] @relation("follower")
   followers Follow[] @relation("following")
 
+  @@check(expression: "usr_username = lower(usr_username)", name: "users_username_lowercase")
+  @@check(expression: "usr_email = lower(usr_email)", name: "users_email_lowercase")
+  @@check(expression: "char_length(usr_username) >= 3 AND usr_username ~ '^[!-~]+$'", name: "users_username_format")
   @@map("users")
 }
 
